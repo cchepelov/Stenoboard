@@ -32,3 +32,8 @@ drawKeySurfaceDifference = true;
 keySurfaceDifferenceFn = 256;
 scaleKeyTopBevel = 1.4;
 
+/* The General Facet Tolerance. This is used to compute the best $fa parameters in spheres & cylinders.
+Set it too big and facets will show up on printed artifacts, set it too low and your CPU & RAM will choke. */
+GeneralFacetTolerance = 0.10;
+
+

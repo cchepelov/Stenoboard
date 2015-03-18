@@ -23,40 +23,39 @@ include <common_parameters_base.scad>;
 
 /* ******************************** Surfaces *********************************** */
 
-module keyArm(armWidth = 4, armLength = 50, armHeight = 5, pivotDepth = 4) {
-  translate([0, -armLength / 2, armHeight / 2]) beveledCube([armWidth, armLength, armHeight], center = true, bevelY = [true, false]);
+module keyArm(armWidth = 4, armLength = 50, armHeight = 5, pivotDepth = 4, tolerance = GeneralFacetTolerance) {
+  translate([0, -armLength / 2, armHeight / 2]) beveledCube([armWidth, armLength, armHeight], center = true, bevelY = [true, false], tolerance = tolerance);
 }
 
-module topRowKeySurface(keyW = 13, keyD = 25, keyH = 1.25, drawDifference = true, isRightWideKey = false, isLeftWideKey = false, drawDifference = true, isNearNumberSwitchKey = [false, false]) {
+module topRowKeySurface(keyW = 13, keyD = 25, keyH = 1.25, drawDifference = true, isRightWideKey = false, isLeftWideKey = false, drawDifference = true, isNearNumberSwitchKey = [false, false], tolerance = GeneralFacetTolerance) {
   difference() {
-    translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0) + (isNearNumberSwitchKey[1] ? 1 : 0), -keyD / 2, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0) - (isNearNumberSwitchKey[0] ? 1 : 0) - (isNearNumberSwitchKey[1] ? 1 : 0), keyD, keyH], topBevels = [drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false], scaleTopBevel = scaleKeyTopBevel);
-    if(drawKeySurfaceDifference && drawDifference) translate([0, 0, 29.5 + keyH]) rotate([90, 0, 0]) cylinder(r = 30, h = 50, center = true, $fn = keySurfaceDifferenceFn);
+    translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0) + (isNearNumberSwitchKey[1] ? 1 : 0), -keyD / 2, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0) - (isNearNumberSwitchKey[0] ? 1 : 0) - (isNearNumberSwitchKey[1] ? 1 : 0), keyD, keyH], topBevels = [drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false], scaleTopBevel = scaleKeyTopBevel, tolerance = tolerance);
+    if(drawKeySurfaceDifference && drawDifference) translate([0, 0, 29.5 + keyH]) rotate([90, 0, 0]) cylinderXR(r = 30, h = 50, center = true, tolerance = tolerance);
   }
 }
 
-module bottomRowKeySurface(keyW = 13, keyD = 25, keyH = 1.25, isRightWideKey = false, isLeftWideKey = false, drawDifference = true) {
+module bottomRowKeySurface(keyW = 13, keyD = 25, keyH = 1.25, isRightWideKey = false, isLeftWideKey = false, drawDifference = true, tolerance = GeneralFacetTolerance) {
   difference() {
     //translate([-keyW / 2 + (isLeftWideKey ? -3.7 : 0), -keyD / 2, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 3.7 : 0) + (isRightWideKey ? 3.7 : 0), keyD, keyH]);
     union() {
-      translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0), 0, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0), keyD / 2, keyH], bevelY = [false, true], topBevels = [drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, false], scaleTopBevel = scaleKeyTopBevel);
-      translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0), -keyD / 2, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0), keyD / 2 + 2, keyH], bevelY = [true, false], topBevels = [drawKeySurfaceTopBevel ? true : false, false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false], bevelR = keyW / 2, bevelSegments = 24, scaleTopBevel = scaleKeyTopBevel);
+      translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0), 0, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0), keyD / 2, keyH], bevelY = [false, true], topBevels = [drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, false], scaleTopBevel = scaleKeyTopBevel, tolerance = tolerance);
+      translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0), -keyD / 2, 0]) advancedBeveledCube([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0), keyD / 2 + 2, keyH], bevelY = [true, false], topBevels = [drawKeySurfaceTopBevel ? true : false, false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false], bevelR = keyW / 2, bevelSegments = 24, scaleTopBevel = scaleKeyTopBevel, tolerance = tolerance);
     }
     if(drawKeySurfaceDifference && drawDifference) {
-      translate([0, 25 - (keyD / 2 - keyW / 2), 29.5 + keyH]) rotate([90, 0, 0]) cylinder(r = 30, h = 50, center = true, $fn = keySurfaceDifferenceFn);
-      translate([0, -(keyD / 2 - keyW / 2), 29.49 + keyH]) rotate([90, 0, 0]) sphere(r = 30, $fn = keySurfaceDifferenceFn);
+      translate([0, 25 - (keyD / 2 - keyW / 2), 29.5 + keyH]) rotate([90, 0, 0]) cylinderXR(r = 30, h = 50, center = true, tolerance = tolerance);
+      translate([0, -(keyD / 2 - keyW / 2), 29.49 + keyH]) rotate([90, 0, 0]) sphereXR(r = 30, tolerance = tolerance);
     }
   }
 }
 
-module numberBarSurface(keyW = 13, keyD = 25, keyH = 1.25, drawDifference = true, keys = 5, drawDifference = true) {
+module numberBarSurface(keyW = 13, keyD = 25, keyH = 1.25, drawDifference = true, keys = 5, drawDifference = true, tolerance = GeneralFacetTolerance) {
   rotate([0, 0, 180]) difference() {
     translate([-keyW / 2 - hKeyDistance * (keys - 1) - 1.2, -keyD / 2, 0]) advancedBeveledCube([keyW + hKeyDistance * (keys - 1) + 2.4, keyD, keyH], topBevels = [drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false, drawKeySurfaceTopBevel ? true : false], scaleTopBevel = scaleKeyTopBevel);
     if(drawKeySurfaceDifference && drawDifference) {
-      for (i = [0 : keys - 1]) translate([-i * hKeyDistance, -(keyD / 2 - keyW / 2) +1, 29.53 + keyH]) rotate([90, 0, 0]) sphere(r = 30, $fn = keySurfaceDifferenceFn);
+      for (i = [0 : keys - 1]) translate([-i * hKeyDistance, -(keyD / 2 - keyW / 2) +1, 29.53 + keyH]) rotate([90, 0, 0]) sphereXR(r = 30, tolerance = tolerance);
     }
   }
 }
-
 
 /* Assemblies */
 

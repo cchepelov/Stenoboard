@@ -18,8 +18,8 @@
  */
 
 use <common_library_primitives.scad>;
+include <common_parameters_base.scad>;
 
-include <common_parameters.scad>;
 
 /* ******************************** Surfaces *********************************** */
 
@@ -57,6 +57,8 @@ module numberBarSurface(keyW = 13, keyD = 25, keyH = 1.25, drawDifference = true
   }
 }
 
+
+/* Assemblies */
 
 module topRowKeyAssembly(pivotLength = 16.5, pivotHeight = 5, pivotDepth = 3.25, coneR1 = 2.5, coneH = 3, tolerancePerSide = 0.25, armWidth = 12, armLength = 40, armHeight = 1.5, topKeyW = 15.2, topKeyD = 26, topKeyH = 2, keySupportH = 0, verticalKeySupportH = 0, backlash = 0.0, isRightWideKey = false, isLeftWideKey = false, isNearNumberSwitchKey = [false, false]) {
   translate([0,1,0]) carvedArm(armL = armLength - 3, armW = armWidth, levelH = 0.4, firstLevelH = 0.6, levelTranslateIncrement = 2.5, levels = 2, drawFakeKey = false);
@@ -106,12 +108,16 @@ module numberBarAssembly(pivotLength = 16.5, pivotHeight = 5, pivotDepth = 3.25,
 
 module topRowKeysAssembly(keys = 2, rightWideKeyIndex = 0, leftWideKeyIndex = 4, keyH = 4) {
   union() {
-    for (i = [0 : keys - 1]) translate([hKeyDistance * i - 0.1, 0, 0]) topRowKeyAssembly(armHeight = 0.25 + i * 0.25, isRightWideKey = (i == rightWideKeyIndex ? true : false), isLeftWideKey = (i == leftWideKeyIndex ? true : false), topKeyH = keyH, isNearNumberSwitchKey = [(i == 2 ? true : false), (i == 3 ? true : false)]);
+    for (i = [0 : keys - 1]) translate([hKeyDistance * i - 0.1, 0, 0]) topRowKeyAssembly(armHeight = 0.25 + i * 0.25, isRightWideKey = (i == rightWideKeyIndex ? true : false), isLeftWideKey = (i == leftWideKeyIndex ? true : false), topKeyH = keyH, isNearNumberSwitchKey = [(i == 2 ? true : false), (i == 3 ? true : false)],
+	drawKeySurfaceTopBevel = drawKeySurfaceTopBevel, scaleKeyTopBevel = scaleKeyTopBevel, 
+	drawKeySurfaceDifference = drawKeySurfaceDifference);
   }
 }
 
 module bottomRowKeysAssembly3(keys = 2, rightWideKeyIndex = 0, leftWideKeyIndex = 4, keyH = 5.2) {
-  for (i = [0 : keys - 1]) translate([hKeyDistance * i - 0.1, 0, 0]) bottomRowKeyAssembly(armHeight = 0.25 + i * 0.25, isRightWideKey = (i == rightWideKeyIndex ? true : false), isLeftWideKey = (i == leftWideKeyIndex ? true : false), keyH = keyH);
+  for (i = [0 : keys - 1]) translate([hKeyDistance * i - 0.1, 0, 0]) bottomRowKeyAssembly(armHeight = 0.25 + i * 0.25, isRightWideKey = (i == rightWideKeyIndex ? true : false), isLeftWideKey = (i == leftWideKeyIndex ? true : false), keyH = keyH,
+	drawKeySurfaceTopBevel = drawKeySurfaceTopBevel, scaleKeyTopBevel = scaleKeyTopBevel, 
+	drawKeySurfaceDifference = drawKeySurfaceDifference);
 }
 
 module carvedArm(armL, armW, levelH, firstLevelH, levelTranslateIncrement, levels, drawFakeKey = false, bevel = true) {
@@ -192,7 +198,7 @@ module screwHole(id, od, h, topOd, coneH, bevel = [false, false, false, false], 
   }
 }
 
-module vowelsFrame(baseH = -1, frameH = 6.3, isKeyboard = false) {
+module vowelsFrame(baseH = -1, frameH = 6.3, isKeyboard = false, rightVowelsScrewH) {
   union() {
     difference() {
       union() {
@@ -219,7 +225,7 @@ module vowelsFrame(baseH = -1, frameH = 6.3, isKeyboard = false) {
   }
 }
 
-module vowelsBase(baseH) {
+module vowelsBase(baseH, rightVowelsBasePosition) {
   union() {
     translate(rightVowelsBasePosition) difference() {
       vowelsFrame(baseH = baseH, frameH = rightVowelsScrewH + screwFrameVerticalOffset);
@@ -236,11 +242,11 @@ module vowelsBase(baseH) {
   }
 }
 
-module vowelsKeyboard() {
+module vowelsKeyboard(rightVowelsBasePosition, rightVowelsScrewH, vowelsKeyDistance, rightEReference) {
  union() {
   difference() {
     union() {
-      translate(rightVowelsBasePosition) vowelsFrame(isKeyboard = true);
+      translate(rightVowelsBasePosition) vowelsFrame(isKeyboard = true, rightVowelsScrewH = rightVowelsScrewH);
       translate(rightEReference + [0, 9, 0]) {
         difference() {
           union() {

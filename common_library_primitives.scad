@@ -17,6 +17,8 @@
  * Copyright 2014 Emanuele Caruso. See LICENSE for details.
  */
 
+include <common_parameters_base.scad>;
+
 module beveledCube(cubeEdges, center = false, bevelR = 2, bevelSegments = 10, bevelX = [true, true], bevelY = [true, true]) {
   difference() {
     cube(cubeEdges, center = center);

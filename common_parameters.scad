@@ -23,11 +23,6 @@
 hKeyDistance = 18.325;
 vowelsKeyDistance = 14.5;
 framePosition = [-17.75, -69.5, 0];
-drawKeySupport = false;
-drawKeySurfaceTopBevel = true;
-drawKeySurfaceDifference = true;
-keySurfaceDifferenceFn = 256;
-scaleKeyTopBevel = 1.4;
 
 boardCenter = [46,-41.25,0];
 rightRReference = boardCenter + [-hKeyDistance * 1.5, -22, 0];
@@ -56,6 +51,9 @@ arduinoScrewH = 6;
 arduinoScrewD = 3;
 rightVowelsBasePosition = [-8.5, -107, 0];
 rightVowelsBaseScrewD = 3.0;
+
+/* These aren't parameters per se, but are useful to check where we are (screw positions etc.): */
+
 %translate(boardCenter) cylinder(r=1,h=10,$fn=6);
 %translate(rightRReference) cylinder(r=1,h=10,$fn=6);
 %translate(rightEReference + [0, 0, 30]) cylinder(r=1,h=10,$fn=6);

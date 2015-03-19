@@ -24,15 +24,21 @@ minAngleTolerance = (1/3);
 module cubeX(size = 1, center = false, tolerance = "(ignored)") { cube(size, center); }
 
 module sphereXR(r = 1, center = false, tolerance = GeneralFacetTolerance) {	
+	echo("sphere $fa=", 2*acos( ((r - tolerance) / r)  ), " $fs=", 2 * r * sin(2*acos( ((r - tolerance) / r)) ) );
+
 	sphere(r = r, center = center, 
-		$fa = 2*acos( (tolerance < (r * minAngleTolerance)) ? ((r - tolerance) / r) : minAngleTolerance ) );
+		$fa = 2*acos( ((r - tolerance) / r)  ), 
+		$fs= 2 * r * sin(2*acos( ((r - tolerance) / r)) ) );
 }
 module sphereXD(d = 1, center = false, tolerance = GeneralFacetTolerance) {
 	sphereXR(r = d/2, center = center, tolerance = tolerance);
 }
 module cylinderXR(h = 1, r = 1, center = false, tolerance = GeneralFacetTolerance) {
+	echo("cylinder $fa=", 2*acos( ((r - tolerance) / r)  ), " $fs=", 2 * r * sin(2*acos( ((r - tolerance) / r)) ) );
+
 	cylinder(h = h, r = r, center = center, 
-		$fa = 2*acos( (tolerance < (r * minAngleTolerance)) ? ((r - tolerance) / r) : minAngleTolerance ) );
+		$fa = 2*acos( ((r - tolerance) / r)  ), 
+		$fs= 2 * r * sin(2*acos( ((r - tolerance) / r)) ) );
 }
 module cylinderXD(h = 1, d = 1, center = false, tolerance = GeneralFacetTolerance) {
 	cylinderXR(h = h, r = d/2, center = center, tolerance = tolerance);
@@ -73,21 +79,125 @@ module beveledCube(cubeEdges, center = false, bevelR = 2,
   }
 }
 
-module advancedBeveledCube(cubeEdges, center = false, bevelR = 2, bevelX = [true, true], bevelY = [true, true], topBevels = [true, true, true, true], topBevelR = 0.8, scaleTopBevel = 1, tolerance = GeneralFacetTolerance, bevelSegments = 10) {
+
+module peelOffThickness(thickness, tolerance=GeneralFacetTolerance) {
+	difference() {
+		children(0);
+		minkowski($fa = 2*acos( ((thickness - tolerance) / thickness)  ) ) {
+			difference() {
+				minkowski($fa = 2*acos( ((thickness - tolerance) / thickness)  ) ) { children(0); cubeX(size=thickness, center=true); }
+				children(0);
+			}
+			cubeX(size=thickness, center=true);
+		}	
+	}
+}
+
+module bezelizeTopSurface(height, bezelR, topS=[30,30], tolerance = GeneralFacetTolerance) {
+	union() {
+		intersection() {
+			minkowski($fa = 2*acos( ((bezelR - tolerance) / bezelR)  ) ) {
+				peelOffThickness(thickness = bezelR, tolerance=tolerance) { children(0); }
+				sphereXR(r = bezelR, center=true, tolerance = tolerance);
+			}
+
+			translate([-topS[0]/2, -topS[1]/2, -bezelR + height - 1]) cubeX(size=[topS[0],topS[1],height], center=false);
+		}
+
+
+		intersection() {
+			minkowski() {
+				peelOffThickness(thickness = bezelR, tolerance=tolerance) { children(0); }
+				cylinderXR(r = bezelR, h=2*bezelR, center=true, tolerance = tolerance);
+			}
+			translate([-topS[0]/2, -topS[1]/2, -bezelR ]) cubeX(size=[topS[0],topS[1],height], center=false);
+		}
+	}
+}
+
+
+module advancedBeveledCube(cubeEdges, center = false, bevelR = 2, bevelX = [true, true], bevelY = [true, true], topBevels = [true, true, true, true], topBevelR = 0.8, scaleTopBevel = 1, tolerance = GeneralFacetTolerance, bevelSegments = 3) {
+ 
+  union() {
+		difference() {
+	  			beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+	
+			union() {
+				scale([ 1.1, 1.1, 1 ])
+		  			beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+				translate([0, 0, -(cubeEdges[2]+topBevelR)/cubeEdges[2]]) scale([ 1, 1, 1.2 ])
+		  			beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+			}
+		}
+
+
+	*minkowski($fs = 0.1) {
+		difference() {	
+			*minkowski($fs = 0.1) {
+			  beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+			  cubeX(size = topBevelR, center=true, tolerance = tolerance);
+			}
+			union() {
+				resize([ (cubeEdges[0]+topBevelR)/cubeEdges[0], (cubeEdges[1]+topBevelR)/cubeEdges[1], 1 ])
+	 	  			beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+				resize([ 1, 1, (cubeEdges[2]+topBevelR)/cubeEdges[2] ])
+	 	  			beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+			}
+		}
+		sphereXR(r = topBevelR, center=true, tolerance = tolerance);
+	}
+
 
 
   difference() {
-    beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+    *beveledCube(cubeEdges = cubeEdges, center = center, bevelR = bevelR, tolerance = tolerance, bevelX = bevelX, bevelY = bevelY);
+
     // Top bevels
     if(topBevels[2]) translate([center ? -cubeEdges[0] / 2 : 0, 0, cubeEdges[2] / (center ? 2 : 1)]) rotate([-90, 0, 0]) scale([1, scaleTopBevel, 1]) bevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
+
+/*
     if(topBevels[0]) translate([center ? cubeEdges[0] / 2 : cubeEdges[0], 0, cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, 180]) rotate([-90, 0, 0]) scale([1, scaleTopBevel, 1]) bevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance,  minThickness = 0);
     if(topBevels[3])  translate([0, (center ? -cubeEdges[1] / 2 : 0), cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 90, 0]) scale([scaleTopBevel, 1, 1]) bevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance,  minThickness = 0);
     if(topBevels[1]) translate([0, (center ? cubeEdges[1] / 2 : cubeEdges[1]), cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, 180]) rotate([0, 90, 0]) scale([scaleTopBevel, 1, 1]) bevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
     // Top corner bevels
-    if(topBevels[0] && topBevels[1]) for(i = [0 : bevelSegments - 1]) translate([cubeEdges[0] / (center ? 2 : 1) - bevelR, cubeEdges[1] / (center ? 2 : 1) - bevelR, cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, (90 / bevelSegments / 2) + i * (90 / bevelSegments)]) translate([bevelR, bevelR, 0]) scale([1, 1, scaleTopBevel]) cornerBevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
+
+    if(topBevels[0] && topBevels[1]) 
+		for(i = [0 : bevelSegments - 1]) 
+			translate([cubeEdges[0] / (center ? 2 : 1) - bevelR, cubeEdges[1] / (center ? 2 : 1) - bevelR, cubeEdges[2] / (center ? 2 : 1)]) 
+		rotate([0, 0, (90 / bevelSegments / 2) + i * (90 / bevelSegments)]) 
+		translate([bevelR, bevelR, 0]) 
+		scale([1, 1, scaleTopBevel]) 
+			cornerBevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
+
+
     if(topBevels[1] && topBevels[2]) translate([(!center ? cubeEdges[0] / 2 : 0), (!center ? cubeEdges[1] / 2 : 0), 0]) mirror([1, 0, 0]) for(i = [0 : bevelSegments - 1]) translate([cubeEdges[0] / 2 - bevelR, cubeEdges[1] / 2 - bevelR, cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, (90 / bevelSegments / 2) + i * (90 / bevelSegments)]) translate([bevelR, bevelR, 0]) scale([1, 1, scaleTopBevel]) cornerBevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
     if(topBevels[2] && topBevels[3]) translate([(!center ? cubeEdges[0] / 2 : 0), (!center ? cubeEdges[1] / 2 : 0), 0]) mirror([1, 0, 0])  mirror([0, 1, 0]) for(i = [0 : bevelSegments - 1]) translate([cubeEdges[0] / 2 - bevelR, cubeEdges[1] / 2 - bevelR, cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, (90 / bevelSegments / 2) + i * (90 / bevelSegments)]) translate([bevelR, bevelR, 0]) scale([1, 1, scaleTopBevel]) cornerBevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, minThickness = 0, tolerance = tolerance);
     if(topBevels[0] && topBevels[3]) translate([(!center ? cubeEdges[0] / 2 : 0), (!center ? cubeEdges[1] / 2 : 0), 0]) mirror([0, 1, 0])  for(i = [0 : bevelSegments - 1]) translate([cubeEdges[0] / 2 - bevelR, cubeEdges[1] / 2 - bevelR, cubeEdges[2] / (center ? 2 : 1)]) rotate([0, 0, (90 / bevelSegments / 2) + i * (90 / bevelSegments)]) translate([bevelR, bevelR, 0]) scale([1, 1, scaleTopBevel]) cornerBevel(r = topBevelR, length = (cubeEdges[0] + cubeEdges[1]) * 3, tolerance = tolerance, minThickness = 0);
+	*/
   }
+
+	
+
+    if(topBevels[3] && topBevels[0]) 
+		translate([center ? 0 : cubeEdges[0] / 2, center ? 0 : cubeEdges[1] / 2, center ? 0 : cubeEdges[2] / 2]) 
+		translate([ - cubeEdges[0]/2, - cubeEdges[1]/2, cubeEdges[2] / 2]) 
+			cubeX(size= 2 * topBevelR, center=true);
+
+
+    if(topBevels[0] && topBevels[1]) 
+		translate([center ? 0 : cubeEdges[0] / 2, center ? 0 : cubeEdges[1] / 2, center ? 0 : cubeEdges[2] / 2]) 
+		translate([ - cubeEdges[0]/2, +cubeEdges[1]/2, cubeEdges[2] / 2]) 
+			cubeX(size= 2 * topBevelR, center=true);
+
+    if(topBevels[1] && topBevels[2]) 
+		translate([center ? 0 : cubeEdges[0] / 2, center ? 0 : cubeEdges[1] / 2, center ? 0 : cubeEdges[2] / 2]) 
+		translate([ + cubeEdges[0]/2, +cubeEdges[1]/2, cubeEdges[2] / 2]) 
+			cubeX(size= 2 * topBevelR, center=true);
+
+    if(topBevels[2] && topBevels[3]) 
+		translate([center ? 0 : cubeEdges[0] / 2, center ? 0 : cubeEdges[1] / 2, center ? 0 : cubeEdges[2] / 2]) 
+		translate([ + cubeEdges[0]/2, - cubeEdges[1]/2, cubeEdges[2] / 2]) 
+			cubeX(size= 2 * topBevelR, center=true);
+}
 }
 

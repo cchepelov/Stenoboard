@@ -18,7 +18,9 @@
  */
 
 include <common_parameters.scad>;
+include <common_parameters_base.scad>;
 use <common_library.scad>;
+use <common_library_primitives.scad>;
 
 
 
@@ -41,3 +43,16 @@ translate([-14.5, 24, 0]) vowelsKeyboard();
 //rightAssembly(drawConsonants = true, drawNumbers = true);
 
 
+module test(keyW = 13, keyD = 25, keyH = 5.25, topBevelR = 0.8,  drawDifference = true, isRightWideKey = false, isLeftWideKey = false, drawDifference = true, isNearNumberSwitchKey = [false, false], tolerance = GeneralFacetTolerance) {
+    
+    bezelizeTopSurface(keyH, topBevelR, tolerance = tolerance) 
+	union() {
+      translate([-keyW / 2 + (isLeftWideKey ? -2.4 : 0), 0, 0]) union() {
+	cubeX([keyW + (isLeftWideKey ? 2.4 : 0) + (isRightWideKey ? 2.4 : 0) , keyD / 2, keyH]);
+	translate([0, keyD/4, 0]) cylinderXR(r = keyD/4, h = keyH, tolerance = tolerance);
+	}
+    };
+	
+}
+
+test();
